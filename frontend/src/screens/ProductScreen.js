@@ -1,22 +1,29 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { listProductDetails } from '../actions/productActions';
-import { Row, Col, Image, ListGroup, Card, Button } from 'react-bootstrap';
+import { addToCart } from '../actions/cartActions';
+import { Row, Col, Image, ListGroup, Card, Button, Form } from 'react-bootstrap';
 import Rating from '../components/Rating';
 import Loader from '../components/Loader';
 import Message from '../components/Message';
 
-const ProductScreen = ({ match }) => {
+const ProductScreen = ({ history, match }) => {
+    const [qty, setQty] = useState(1);
   
     const dispatch = useDispatch();
 
     useEffect(() => {
         dispatch(listProductDetails(match.params.id))
-    }, [dispatch, match])
+    }, [dispatch, match]);
 
     const productDetails = useSelector(state => state.productDetails);
     const { loading, error, product } = productDetails;
+
+    const addToCardHandler = () => {
+        dispatch(addToCart(product._id, qty))
+        history.push('/cart')
+    }
 
     return (
         <>
@@ -68,8 +75,32 @@ const ProductScreen = ({ match }) => {
                                         </Col>
                                     </Row>
                                 </ListGroup.Item>
+
+                                {product.countInStock > 0 && (
+                                    <ListGroup.Item>
+                                        <Row>
+                                            <Col>Qty</Col>
+                                            <Col>
+                                                <Form.Control 
+                                                    type="number"
+                                                    value={qty} 
+                                                    onChange={(e) => setQty(e.target.value)}
+                                                    min="1"
+                                                    max={product.countInStock}
+                                                    onKeyDown={(e) => e.preventDefault()}
+                                                />                
+                                            </Col>
+                                        </Row>
+                                    </ListGroup.Item>
+                                )}
+
                                 <ListGroup.Item>
-                                    <Button className='btn-block' type='button' disabled={product.countInStock === 0}>
+                                    <Button 
+                                        onClick={addToCardHandler}
+                                        className='btn-block' 
+                                        type='button' 
+                                        disabled={product.countInStock === 0}
+                                    >
                                         Add To Cart
                                     </Button>
                                 </ListGroup.Item>
@@ -80,6 +111,6 @@ const ProductScreen = ({ match }) => {
             )}
         </>
     )
-}
+};
 
-export default ProductScreen
+export default ProductScreen;
